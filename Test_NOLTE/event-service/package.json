@@ -1,0 +1,22 @@
+{
+  "name": "event-service",
+  "version": "1.0.0",
+  "description": "Full-stack Event Management System",
+  "scripts": {
+    "setup": "./setup.sh",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "build:server": "cd server && npm run build",
+    "build:client": "cd client && npm run build",
+    "test:server": "cd server && npm test",
+    "test:client": "cd client && npm test",
+    "test:all": "npm run test:server && npm run test:client"
+  },
+  "keywords": ["event", "management", "api", "react", "nextjs"],
+  "author": "MiniMax Agent",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
