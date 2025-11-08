@@ -61,4 +61,29 @@ export class EventController {
       next(error);
     }
   };
+  searchEvents = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { q, page, limit, ...filters } = req.query as any;
+
+      if (!q || typeof q !== 'string') {
+        return res.status(400).json({
+          error: {
+            code: 'MISSING_QUERY',
+            message: 'Search query parameter "q" is required',
+          },
+        });
+      }
+
+      const result = await this.eventService.searchEvents(
+        q,
+        filters,
+        parseInt(page) || 1,
+        Math.min(parseInt(limit) || 20, 100)
+      );
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
 }

@@ -13,19 +13,58 @@ enum EventStatus {
   CANCELLED
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
+// EXISTING MODEL - Enhanced with relations
 model Event {
-  id            String      @id @default(uuid())
-  title         String      @db.VarChar(200)
+  id            String       @id @default(uuid())
+  title         String       @db.VarChar(200)
   startAt       DateTime
   endAt         DateTime
   location      String
-  status        EventStatus @default(DRAFT)
-  internalNotes String?     @db.Text
+  status        EventStatus  @default(DRAFT)
+  internalNotes String?      @db.Text
   createdBy     String?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  userId        String?      // NEW: Link to User model
+  user          User?        @relation(fields: [userId], references: [id])
+  images        EventImage[] // NEW: Relation to images
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 
   @@index([status])
   @@index([startAt])
   @@index([location])
+  @@index([userId])
+  @@fulltext([title, location]) // NEW: Full-text search index
+}
+
+// NEW MODEL
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String   // hashed with bcrypt
+  name      String?
+  role      UserRole @default(USER)
+  events    Event[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
+// NEW MODEL
+model EventImage {
+  id        String   @id @default(uuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  filename  String
+  url       String
+  mimeType  String
+  size      Int
+  createdAt DateTime @default(now())
+
+  @@index([eventId])
 }

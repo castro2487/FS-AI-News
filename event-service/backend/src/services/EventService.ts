@@ -144,4 +144,60 @@ export class EventService {
       updatedAt: event.updatedAt.toISOString(),
     };
   }
+
+  async searchEvents(
+    query: string,
+    filters: EventFilters,
+    page: number = 1,
+    limit: number = 20
+  ): Promise<PaginatedResponse<Event>> {
+    const where: any = {};
+
+    // Full-text search on title and location
+    if (query) {
+      where.OR = [
+        { title: { contains: query, mode: 'insensitive' as const } },
+        { location: { contains: query, mode: 'insensitive' as const } },
+      ];
+    }
+
+    // Apply existing filters
+    if (filters.dateFrom || filters.dateTo) {
+      where.startAt = {};
+      if (filters.dateFrom) {
+        where.startAt.gte = new Date(filters.dateFrom);
+      }
+      if (filters.dateTo) {
+        where.startAt.lte = new Date(filters.dateTo + 'T23:59:59Z');
+      }
+    }
+
+    if (filters.status) {
+      const statuses = filters.status.split(',').map(s => s.trim() as PrismaEventStatus);
+      where.status = { in: statuses };
+    }
+
+    const [events, total] = await Promise.all([
+      this.prisma.event.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: [
+          { startAt: 'asc' },
+          { title: 'asc' },
+        ],
+      }),
+      this.prisma.event.count({ where }),
+    ]);
+
+    return {
+      events: events.map(this.mapToEvent),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
 }
