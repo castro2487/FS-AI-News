@@ -22,6 +22,51 @@ export class PublicEventController {
     }
   };
 
+  // NEW: Public search method
+  searchPublicEvents = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { q, page, limit, ...filters } = req.query as any;
+
+      if (!q || typeof q !== 'string') {
+        return res.status(400).json({
+          error: {
+            code: 'MISSING_QUERY',
+            message: 'Search query parameter "q" is required',
+          },
+        });
+      }
+
+      // Use searchEvents but filter to only published/cancelled
+      const result = await this.eventService.searchEvents(
+        q,
+        {
+          ...filters,
+          status: 'PUBLISHED,CANCELLED', // Only public events
+        },
+        parseInt(page) || 1,
+        Math.min(parseInt(limit) || 20, 100)
+      );
+
+      // Map to public event format
+      const publicResult = {
+        events: result.events.map(event => ({
+          id: event.id,
+          title: event.title,
+          startAt: event.startAt,
+          endAt: event.endAt,
+          location: event.location,
+          status: event.status,
+          isUpcoming: new Date(event.startAt) > new Date(),
+        })),
+        pagination: result.pagination,
+      };
+
+      res.json(publicResult);
+    } catch (error) {
+      next(error);
+    }
+  };
+
   getEventSummary = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;

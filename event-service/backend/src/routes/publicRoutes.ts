@@ -12,6 +12,12 @@ export function createPublicRoutes(publicController: PublicEventController): Rou
     publicController.getPublicEvents
   );
 
+  // NEW: Public search endpoint
+  router.get(
+    '/events/search',
+    publicController.searchPublicEvents
+  );
+
   router.get(
     '/events/:id/summary',
     publicController.getEventSummary

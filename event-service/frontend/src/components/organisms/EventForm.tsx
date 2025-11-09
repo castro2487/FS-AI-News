@@ -2,14 +2,24 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '../atoms/Button';
 import { FormField } from '../molecules/FormField';
-import { CreateEventDTO, EventStatus } from '@/types/event.types';
+import { ImageUpload } from './ImageUpload';
+import { CreateEventDTO, EventStatus, EventImage } from '@/types/event.types';
 
 export interface EventFormProps {
   onSubmit: (data: CreateEventDTO) => Promise<void>;
   onClose: () => void;
+  eventId?: string; // For editing existing events with images
+  images?: EventImage[];
+  onImagesChange?: () => void;
 }
 
-export const EventForm: React.FC<EventFormProps> = ({ onSubmit, onClose }) => {
+export const EventForm: React.FC<EventFormProps> = ({ 
+  onSubmit, 
+  onClose,
+  eventId,
+  images = [],
+  onImagesChange,
+}) => {
   const [formData, setFormData] = useState<CreateEventDTO>({
     title: '',
     startAt: '',
@@ -21,6 +31,7 @@ export const EventForm: React.FC<EventFormProps> = ({ onSubmit, onClose }) => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [showImageUpload, setShowImageUpload] = useState(false);
 
   const handleSubmit = async () => {
     setErrors({});
@@ -123,6 +134,30 @@ export const EventForm: React.FC<EventFormProps> = ({ onSubmit, onClose }) => {
                 rows={3}
               />
             </div>
+
+            {/* Image Upload Section - Only show if editing existing event */}
+            {eventId && onImagesChange && (
+              <div className="border-t border-gray-200 pt-4 mt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold text-gray-900">Event Images</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowImageUpload(!showImageUpload)}
+                  >
+                    {showImageUpload ? 'Hide' : 'Show'} Images
+                  </Button>
+                </div>
+                
+                {showImageUpload && (
+                  <ImageUpload
+                    eventId={eventId}
+                    images={images}
+                    onImagesChange={onImagesChange}
+                  />
+                )}
+              </div>
+            )}
 
             <div className="flex gap-3 pt-4">
               <Button onClick={handleSubmit} disabled={loading} className="flex-1">
